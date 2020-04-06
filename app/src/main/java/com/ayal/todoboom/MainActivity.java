@@ -17,12 +17,9 @@ public class MainActivity extends AppCompatActivity {
 
         Button button = findViewById(R.id.btn1);
         final EditText input = findViewById(R.id.edit);
-
-
         final TextView textView = findViewById(R.id.text);
 
-
-        button.setOnClickListener(new View.OnClickListener(){
+        button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String string = input.getText().toString();
@@ -32,12 +29,4 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 }
-//        android:layout_marginStart="160dp"
-//                android:layout_marginBottom="456dp"
 
-//        android:layout_marginStart="168dp"
-//                android:layout_marginBottom="540dp"
-
-//        android:layout_marginBottom="364dp"
-
-//app:layout_constraintVertical_bias="0.62"
