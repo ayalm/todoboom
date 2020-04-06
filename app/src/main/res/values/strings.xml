@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">todoboom</string>
+    <string name="click">Click to display</string>
+    <string name="text_to_display">text to display</string>
+    <string name="put_text_here">put text here</string>
 </resources>
