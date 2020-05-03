@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         adapter = new TodoAdapter();
-        Button button = findViewById(R.id.btn1);
+        final Button button = findViewById(R.id.btn1);
         final EditText input = findViewById(R.id.edit);
         editTextString = input.getText().toString();
 
