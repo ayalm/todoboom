@@ -1,12 +1,16 @@
 package com.ayal.todoboom;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,11 +27,11 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> todoListDone;
 
 
+    @SuppressLint("LongLogTag")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         adapter = new TodoAdapter();
         final Button button = findViewById(R.id.btn1);
         final EditText input = findViewById(R.id.edit);
@@ -46,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+        final AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
 
 
         //set recyclerview
@@ -57,6 +62,50 @@ public class MainActivity extends AppCompatActivity {
         adapter.setTodoClickListener(new TodoClickListener() {
             @Override
             public void onTodoClicked(int position) {
+                Todo todo = adapter.getTodo(position);
+                //when TodoItem clicked
+                if (!todo.isDone()) {
+                    String todoText = todo.getDescription();
+
+                    // change values of todoItem
+                    todo.setDone(true);
+                    todo.setDescription(todoText + " is done");
+                    adapter.notifyDataSetChanged();
+
+                    //add snackBar message
+                    View view = findViewById(R.id.main_layout_id);
+                    String message = "TODO " + todoText + " is now DONE. BOOM!";
+                    int duration = Snackbar.LENGTH_SHORT;
+                    SnackBarError(view, message, duration);
+                }
+            }
+        });
+
+        adapter.setLongTodoClickListener(new TodoLongClickListener() {
+            @Override
+            public void onTodoLongClicked(int position) {
+                builder1.setMessage("Are You Sure to delete?");
+                builder1.setCancelable(true);
+                final Todo todo_delete = adapter.getTodo(position);
+
+                builder1.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        adapter.deleteTodoItem(todo_delete);
+                        adapter.notifyDataSetChanged();
+                        dialog.cancel();
+                    }
+                });
+
+                builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+
+                AlertDialog alert11 = builder1.create();
+                alert11.show();
+
+
                 Todo todo = adapter.getTodo(position);
                 //when TodoItem clicked
                 if (!todo.isDone()) {

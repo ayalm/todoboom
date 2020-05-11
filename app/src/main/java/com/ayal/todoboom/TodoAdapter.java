@@ -14,6 +14,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoHolder> {
 
     private ArrayList<Todo> todoList = new ArrayList<>();
     private TodoClickListener todoClickListener;
+    private TodoLongClickListener todoLongClickListener;
 
 
     @NonNull
@@ -40,6 +41,16 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoHolder> {
                 }
             }
         });
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (todoLongClickListener!=null){
+                   todoLongClickListener.onTodoLongClicked(position);
+                return true;
+                }
+                return false; //todo check
+            }
+        });
     }
 
 
@@ -56,8 +67,16 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoHolder> {
         this.todoClickListener = todoClickListener;
     }
 
+    public void setLongTodoClickListener(TodoLongClickListener todoLongClickListener) {
+        this.todoLongClickListener = todoLongClickListener;
+    }
+
     public void addTodoItem(Todo todo) {
         todoList.add(todo);
+    }
+
+    public void deleteTodoItem(Todo todo){
+        todoList.remove(todo);
     }
 
     public Todo getTodo(int index) {
@@ -67,6 +86,8 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoHolder> {
     public void setTodo(Todo todo, int position) {
         this.todoList.set(position, todo);
     }
+
+
 }
 
 
