@@ -87,7 +87,9 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoHolder> {
         this.todoList.set(position, todo);
     }
 
-
+    public ArrayList<Todo> getTodoList() {
+        return todoList;
+    }
 }
 
 

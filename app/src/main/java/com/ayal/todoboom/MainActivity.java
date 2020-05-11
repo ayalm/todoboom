@@ -9,8 +9,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,29 +25,35 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> todoListDone;
 
 
-    @SuppressLint("LongLogTag")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         adapter = new TodoAdapter();
         final Button button = findViewById(R.id.btn1);
         final EditText input = findViewById(R.id.edit);
         editTextString = input.getText().toString();
 
         // restore state
-        if (savedInstanceState != null) {
-            todoListStrings = savedInstanceState.getStringArrayList("stringArray");
-            todoListDone = savedInstanceState.getStringArrayList("doneArray");
-            editTextString = savedInstanceState.getString("editText");
-
-            input.setText(editTextString);
-            for (int i = 0; i < todoListStrings.size(); i++) {
-                Todo todoItem = new Todo(todoListStrings.get(i), Boolean.parseBoolean(todoListDone.get(i)));
-                adapter.addTodoItem(todoItem);
-
-            }
+        for (Todo todoItem : AppManager.todoArrayList) {
+            adapter.addTodoItem(todoItem);
         }
+        editTextString =AppManager.editText;
+        input.setText(editTextString);
+
+//todo delete here and onsavedinstance
+//        if (savedInstanceState != null) {
+//            todoListStrings = savedInstanceState.getStringArrayList("stringArray");
+//            todoListDone = savedInstanceState.getStringArrayList("doneArray");
+//            editTextString = savedInstanceState.getString("editText");
+//            input.setText(editTextString);
+//            for (int i = 0; i < todoListStrings.size(); i++) {
+//                Todo todoItem = new Todo(todoListStrings.get(i), Boolean.parseBoolean(todoListDone.get(i)));
+//                adapter.addTodoItem(todoItem);
+//            }
+//        }
+
         final AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
 
 
@@ -70,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
                     // change values of todoItem
                     todo.setDone(true);
                     todo.setDescription(todoText + " is done");
+                    AppManager.updateGson(getApplicationContext(),adapter.getTodoList(),editTextString);
                     adapter.notifyDataSetChanged();
 
                     //add snackBar message
@@ -88,10 +93,13 @@ public class MainActivity extends AppCompatActivity {
                 builder1.setCancelable(true);
                 final Todo todo_delete = adapter.getTodo(position);
 
+                // if wants to delete for sure
                 builder1.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         adapter.deleteTodoItem(todo_delete);
                         adapter.notifyDataSetChanged();
+                        AppManager.updateGson(getApplicationContext(), adapter.getTodoList(),editTextString);
+
                         dialog.cancel();
                     }
                 });
@@ -106,22 +114,22 @@ public class MainActivity extends AppCompatActivity {
                 alert11.show();
 
 
-                Todo todo = adapter.getTodo(position);
-                //when TodoItem clicked
-                if (!todo.isDone()) {
-                    String todoText = todo.getDescription();
-
-                    // change values of todoItem
-                    todo.setDone(true);
-                    todo.setDescription(todoText + " is done");
-                    adapter.notifyDataSetChanged();
-
-                    //add snackBar message
-                    View view = findViewById(R.id.main_layout_id);
-                    String message = "TODO " + todoText + " is now DONE. BOOM!";
-                    int duration = Snackbar.LENGTH_SHORT;
-                    SnackBarError(view, message, duration);
-                }
+//                Todo todo = adapter.getTodo(position);
+//                //when TodoItem clicked
+//                if (!todo.isDone()) {
+//                    String todoText = todo.getDescription();
+//
+//                    // change values of todoItem
+//                    todo.setDone(true);
+//                    todo.setDescription(todoText + " is done");
+//                    adapter.notifyDataSetChanged();
+//
+//                    //add snackBar message
+//                    View view = findViewById(R.id.main_layout_id);
+//                    String message = "TODO " + todoText + " is now DONE. BOOM!";
+//                    int duration = Snackbar.LENGTH_SHORT;
+//                    SnackBarError(view, message, duration);
+//                }
             }
         });
 
@@ -137,9 +145,10 @@ public class MainActivity extends AppCompatActivity {
                     int duration = Snackbar.LENGTH_SHORT;
                     SnackBarError(view, message, duration);
                 } else {
-                    // create todoboom object
+                    // add todoboom object
                     Todo todo = new Todo(description, false);
                     adapter.addTodoItem(todo);
+                    AppManager.updateGson(getApplicationContext(), adapter.getTodoList(),editTextString);
                     input.getText().clear();
                 }
             }
