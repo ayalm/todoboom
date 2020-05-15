@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         for (Todo todoItem : AppManager.todoArrayList) {
             adapter.addTodoItem(todoItem);
         }
-        editTextString =AppManager.editText;
+        editTextString = AppManager.editText;
         input.setText(editTextString);
 
 //todo delete here and onsavedinstance
@@ -74,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
                     // change values of todoItem
                     todo.setDone(true);
                     todo.setDescription(todoText + " is done");
-                    AppManager.updateGson(getApplicationContext(),adapter.getTodoList(),editTextString);
+                    AppManager.updateGson(getApplicationContext(), adapter.getTodoList(), editTextString);
                     adapter.notifyDataSetChanged();
 
                     //add snackBar message
@@ -98,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int id) {
                         adapter.deleteTodoItem(todo_delete);
                         adapter.notifyDataSetChanged();
-                        AppManager.updateGson(getApplicationContext(), adapter.getTodoList(),editTextString);
+                        AppManager.updateGson(getApplicationContext(), adapter.getTodoList(), editTextString);
 
                         dialog.cancel();
                     }
@@ -148,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
                     // add todoboom object
                     Todo todo = new Todo(description, false);
                     adapter.addTodoItem(todo);
-                    AppManager.updateGson(getApplicationContext(), adapter.getTodoList(),editTextString);
+                    AppManager.updateGson(getApplicationContext(), adapter.getTodoList(), editTextString);
                     input.getText().clear();
                 }
             }
@@ -172,5 +173,12 @@ public class MainActivity extends AppCompatActivity {
     public void SnackBarError(View view, String message, int duration) {
         Snackbar.make(view, message, duration).show();
     }
+
+//    public void moveToActivity() {
+//        Intent intent = new Intent(MainActivity.this, NextActivity.class);
+//        intent.putExtra("todo position", "value");
+//        startActivity(intent); //todo start activity for result
+//
+//    }
 }
 
