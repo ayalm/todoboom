@@ -1,30 +1,40 @@
 package com.ayal.todoboom;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
+//import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.annotation.SuppressLint;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
-
-import java.util.ArrayList;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final int NOT_COMPLETED = 111;
+    public static final int COMPLETED = 222;
     private String editTextString;
     private TodoAdapter adapter;
-    private ArrayList<String> todoListStrings;
-    private ArrayList<String> todoListDone;
+//    private ArrayList<String> todoListStrings;
+//    private ArrayList<String> todoListDone;
 
+    private FirebaseFirestore db;
+    private int count = 0;
+
+    public Todo getTodo(int position){
+        return adapter.getTodo(position);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,26 +46,11 @@ public class MainActivity extends AppCompatActivity {
         final EditText input = findViewById(R.id.edit);
         editTextString = input.getText().toString();
 
-        // restore state
-        for (Todo todoItem : AppManager.todoArrayList) {
-            adapter.addTodoItem(todoItem);
-        }
-        editTextString = AppManager.editText;
-        input.setText(editTextString);
+        // restore from fireStore
+        refreshDataWithOneTimeQuery();
 
-//todo delete here and onsavedinstance
-//        if (savedInstanceState != null) {
-//            todoListStrings = savedInstanceState.getStringArrayList("stringArray");
-//            todoListDone = savedInstanceState.getStringArrayList("doneArray");
-//            editTextString = savedInstanceState.getString("editText");
-//            input.setText(editTextString);
-//            for (int i = 0; i < todoListStrings.size(); i++) {
-//                Todo todoItem = new Todo(todoListStrings.get(i), Boolean.parseBoolean(todoListDone.get(i)));
-//                adapter.addTodoItem(todoItem);
-//            }
-//        }
 
-        final AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+//        final AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
 
 
         //set recyclerview
@@ -70,71 +65,28 @@ public class MainActivity extends AppCompatActivity {
                 Todo todo = adapter.getTodo(position);
                 //when TodoItem clicked
                 if (!todo.isDone()) {
-                    String todoText = todo.getDescription();
+                    // move to not completed
+                    Intent intent = new Intent(MainActivity.this, NotCompletedTodo.class);
+                    intent.putExtra("todo position", position); //todo maybe delete
+                    intent.putExtra("todo message2", todo.getDescription());
+                    intent.putExtra("creation", todo.creation_timestamp);
+                    intent.putExtra("edit", todo.edit_timestamp);
+                    Log.d("creation timestamp", todo.creation_timestamp +"hey");
+                    startActivityForResult(intent, NOT_COMPLETED);
 
-                    // change values of todoItem
-                    todo.setDone(true);
-                    todo.setDescription(todoText + " is done");
-                    AppManager.updateGson(getApplicationContext(), adapter.getTodoList(), editTextString);
-                    adapter.notifyDataSetChanged();
+                } else {
+                    // if completed_todo is pressed
+                    Intent intent = new Intent(MainActivity.this, CompletedTodo.class);
+                    intent.putExtra("todo position", position); //todo maybe delete
+                    intent.putExtra("todo message", todo.getDescription());
+                    startActivityForResult(intent, COMPLETED);
 
-                    //add snackBar message
-                    View view = findViewById(R.id.main_layout_id);
-                    String message = "TODO " + todoText + " is now DONE. BOOM!";
-                    int duration = Snackbar.LENGTH_SHORT;
-                    SnackBarError(view, message, duration);
+//                    String todoText = ttodo.getDescription();
                 }
             }
         });
 
-        adapter.setLongTodoClickListener(new TodoLongClickListener() {
-            @Override
-            public void onTodoLongClicked(int position) {
-                builder1.setMessage("Are You Sure to delete?");
-                builder1.setCancelable(true);
-                final Todo todo_delete = adapter.getTodo(position);
-
-                // if wants to delete for sure
-                builder1.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        adapter.deleteTodoItem(todo_delete);
-                        adapter.notifyDataSetChanged();
-                        AppManager.updateGson(getApplicationContext(), adapter.getTodoList(), editTextString);
-
-                        dialog.cancel();
-                    }
-                });
-
-                builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-
-                AlertDialog alert11 = builder1.create();
-                alert11.show();
-
-
-//                Todo todo = adapter.getTodo(position);
-//                //when TodoItem clicked
-//                if (!todo.isDone()) {
-//                    String todoText = todo.getDescription();
-//
-//                    // change values of todoItem
-//                    todo.setDone(true);
-//                    todo.setDescription(todoText + " is done");
-//                    adapter.notifyDataSetChanged();
-//
-//                    //add snackBar message
-//                    View view = findViewById(R.id.main_layout_id);
-//                    String message = "TODO " + todoText + " is now DONE. BOOM!";
-//                    int duration = Snackbar.LENGTH_SHORT;
-//                    SnackBarError(view, message, duration);
-//                }
-            }
-        });
-
-
+        // try adding todoitem
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -145,11 +97,17 @@ public class MainActivity extends AppCompatActivity {
                     String message = "you can't create an empty TODO item, oh silly!";
                     int duration = Snackbar.LENGTH_SHORT;
                     SnackBarError(view, message, duration);
+
                 } else {
                     // add todoboom object
-                    Todo todo = new Todo(description, false);
+                    count+=1;
+                    int id =count;
+                    Todo todo = new Todo(description, false, id);
                     adapter.addTodoItem(todo);
-                    AppManager.updateGson(getApplicationContext(), adapter.getTodoList(), editTextString);
+
+                    // add to firebase todo creation timestamp
+//                    db = FirebaseFirestore.getInstance();
+                    db.collection("todoList").document(todo.creation_timestamp).set(todo);
                     input.getText().clear();
                 }
             }
@@ -157,16 +115,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+//        refreshDataWithOneTimeQuery();
+    }
+
+    //todo delete
+    @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        todoListStrings = new ArrayList<>();
-        todoListDone = new ArrayList<>();
-        for (int i = 0; i < adapter.getItemCount(); i++) {
-            todoListStrings.add(adapter.getTodo(i).getDescription());
-            todoListDone.add(adapter.getTodo(i).isDone.toString());
-        }
-        outState.putStringArrayList("stringArray", todoListStrings);
-        outState.putStringArrayList("doneArray", todoListDone);
+
         outState.putString("editText", editTextString);
     }
 
@@ -174,11 +132,94 @@ public class MainActivity extends AppCompatActivity {
         Snackbar.make(view, message, duration).show();
     }
 
-//    public void moveToActivity() {
-//        Intent intent = new Intent(MainActivity.this, NextActivity.class);
-//        intent.putExtra("todo position", "value");
-//        startActivity(intent); //todo start activity for result
-//
-//    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // if returned from a completed todo_item
+        if (requestCode == COMPLETED) {
+            if (resultCode == RESULT_OK) {
+                int position = data.getIntExtra("todo position", -1);
+                boolean toDelete = data.getBooleanExtra("delete", false);
+                boolean unmarkDone = data.getBooleanExtra("unmark", false);
+
+                Todo todo = adapter.getTodo(position);
+                // check if marked undone
+                if (unmarkDone) {
+                    todo.setDone(false);
+                    String undone = todo.getDescription().split(" is done")[0];
+                    todo.setDescription(undone);
+                    // update fireStore
+                    db = FirebaseFirestore.getInstance();
+                    db.collection("todoList").document(todo.creation_timestamp).set(todo);
+                }
+                // check if deleted
+                if (toDelete) {
+                    adapter.deleteTodoItem(todo);
+                    db = FirebaseFirestore.getInstance();
+                    Log.d("creation timestamp",todo.creation_timestamp);
+                    db.collection("todoList").document(todo.creation_timestamp).delete();
+
+                }
+                adapter.notifyDataSetChanged();
+
+
+            }
+        }
+        // if returned from a not completed todo_item
+        if (requestCode == NOT_COMPLETED) {
+            if (resultCode == RESULT_OK) {
+                int position = data.getIntExtra("todo position", -1);
+                boolean markDone = data.getBooleanExtra("markDone", false);
+                String updated_message = data.getStringExtra("changed message");
+
+                Todo todo = adapter.getTodo(position);
+                // if updated message
+                if (updated_message != null) {
+                    todo.setDescription(updated_message);
+                    //update in fireStore
+                    db = FirebaseFirestore.getInstance();
+                    db.collection("todoList").document(todo.creation_timestamp).set(todo);
+
+//                    todo.setDescription(AppManager.editText); todo check
+                }
+                // if marked as done
+                if (markDone) {
+                    todo.setDone(true);
+                    todo.setDescription(todo.description + " is done");
+                }
+
+                //update fireStore
+                db = FirebaseFirestore.getInstance();
+                db.collection("todoList").document(todo.dbId).set(todo);
+//                AppManager.updateGson(getApplicationContext(), adapter.getTodoList(), editTextString);
+                adapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    private void refreshDataWithOneTimeQuery() {
+        db = FirebaseFirestore.getInstance();
+
+
+        db.collection("todoList").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                QuerySnapshot result = task.getResult();
+                if (task.isSuccessful() && result != null) {
+                    adapter.clearTodoList(); //todo check if need array list in main activity
+                    for (DocumentSnapshot document : result) {
+//                        String docId = document.getId(); //todo check if needed
+                        Todo todo = document.toObject(Todo.class);
+                        adapter.addTodoItem(todo);
+                        adapter.notifyDataSetChanged();
+//                       allTodos.put(docId, item); todo check order
+                    }
+                } else {
+                    Log.e("error", "Error getting documents.", task.getException());
+                }
+            }
+        });
+    }
+
 }
 

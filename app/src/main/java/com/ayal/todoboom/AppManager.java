@@ -42,6 +42,7 @@ public class AppManager extends Application {
 
     }
 
+    //todo delete
     public static void updateGson(Context context, ArrayList<Todo> list, String text) {
         todoArrayList = list;
         SharedPreferences sp = context.getSharedPreferences("sp", MODE_PRIVATE);

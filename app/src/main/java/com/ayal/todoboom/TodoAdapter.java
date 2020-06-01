@@ -90,6 +90,10 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoHolder> {
     public ArrayList<Todo> getTodoList() {
         return todoList;
     }
+
+    public void clearTodoList(){
+        todoList.clear();
+    }
 }
 
 

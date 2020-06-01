@@ -4,4 +4,9 @@
     <string name="text_to_display">text to display</string>
     <string name="put_text_here">put text here</string>
     <string name="list_size">\"current size of todo list: \"</string>
+    <string name="unmark_todo">unmark todo</string>
+    <string name="delete_todo">delete todo</string>
+    <string name="apply_button">apply changes</string>
+    <string name="mark_todo_as_done">mark todo as done</string>
+    <string name="todo_message">todo message</string>
 </resources>
