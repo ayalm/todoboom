@@ -20,6 +20,9 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class MainActivity extends AppCompatActivity {
 
     public static final int NOT_COMPLETED = 111;
@@ -30,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
 //    private ArrayList<String> todoListDone;
 
     private FirebaseFirestore db;
-    private int count = 0;
+    private static int count = 0;
 
     public Todo getTodo(int position){
         return adapter.getTodo(position);
@@ -101,24 +104,26 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     // add todoboom object
                     count+=1;
-                    int id =count;
-                    Todo todo = new Todo(description, false, id);
+                    String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+                    String id =String.valueOf(count);
+                    Todo todo = new Todo(description,timestamp,timestamp, false);
                     adapter.addTodoItem(todo);
 
                     // add to firebase todo creation timestamp
 //                    db = FirebaseFirestore.getInstance();
-                    db.collection("todoList").document(todo.creation_timestamp).set(todo);
+                    db.collection("todoList").document(todo.id).set(todo);
                     input.getText().clear();
                 }
             }
         });
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-//        refreshDataWithOneTimeQuery();
-    }
+    //todo check
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+////        refreshDataWithOneTimeQuery();
+//    }
 
     //todo delete
     @Override
@@ -148,21 +153,20 @@ public class MainActivity extends AppCompatActivity {
                     todo.setDone(false);
                     String undone = todo.getDescription().split(" is done")[0];
                     todo.setDescription(undone);
-                    // update fireStore
+                    String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+                    todo.setEdit_timestamp(timestamp);                    // update fireStore
                     db = FirebaseFirestore.getInstance();
-                    db.collection("todoList").document(todo.creation_timestamp).set(todo);
+                    db.collection("todoList").document(todo.id).set(todo);
                 }
                 // check if deleted
                 if (toDelete) {
                     adapter.deleteTodoItem(todo);
                     db = FirebaseFirestore.getInstance();
                     Log.d("creation timestamp",todo.creation_timestamp);
-                    db.collection("todoList").document(todo.creation_timestamp).delete();
+                    db.collection("todoList").document(todo.id).delete();
 
                 }
                 adapter.notifyDataSetChanged();
-
-
             }
         }
         // if returned from a not completed todo_item
@@ -176,21 +180,29 @@ public class MainActivity extends AppCompatActivity {
                 // if updated message
                 if (updated_message != null) {
                     todo.setDescription(updated_message);
+                    String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+                    todo.setEdit_timestamp(timestamp);
                     //update in fireStore
                     db = FirebaseFirestore.getInstance();
-                    db.collection("todoList").document(todo.creation_timestamp).set(todo);
-
+                    db.collection("todoList").document(todo.id).set(todo);
+                    adapter.notifyDataSetChanged();
+                    View view = findViewById(R.id.main_layout_id);
+                    String message = "TODO was changed successfully";
+                    int duration = Snackbar.LENGTH_SHORT;
+                    Snackbar.make(view, message, duration).show();
 //                    todo.setDescription(AppManager.editText); todo check
                 }
                 // if marked as done
                 if (markDone) {
                     todo.setDone(true);
                     todo.setDescription(todo.description + " is done");
+                    String timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+                    todo.setEdit_timestamp(timestamp);
                 }
 
                 //update fireStore
                 db = FirebaseFirestore.getInstance();
-                db.collection("todoList").document(todo.dbId).set(todo);
+                db.collection("todoList").document(todo.id).set(todo);
 //                AppManager.updateGson(getApplicationContext(), adapter.getTodoList(), editTextString);
                 adapter.notifyDataSetChanged();
             }
@@ -210,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
                     for (DocumentSnapshot document : result) {
 //                        String docId = document.getId(); //todo check if needed
                         Todo todo = document.toObject(Todo.class);
+//                        todo.id = document.getId();
                         adapter.addTodoItem(todo);
                         adapter.notifyDataSetChanged();
 //                       allTodos.put(docId, item); todo check order

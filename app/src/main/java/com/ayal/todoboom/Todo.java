@@ -9,24 +9,27 @@ import java.util.Date;
 
 public class Todo {
 
-    String description; //todo content
+    private static long count = 0;
+
+    String description;
     String creation_timestamp;
     String edit_timestamp;
-    int id;
+    String id;
     Boolean isDone;
-    String dbId;
+//    String dbId;
 
-    public Todo(){
-
+    public Todo() {
     }
 
     @SuppressLint("SimpleDateFormat")
-    public Todo(String description, boolean isDone, int id) {
+    public Todo(String description, String creation_timestamp, String edit_timestamp, boolean isDone) {
+        this.id = String.valueOf(count);
+        count += 1;
         this.description = description;
         this.isDone = isDone;
-        this.creation_timestamp =  new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+        this.creation_timestamp = creation_timestamp;
         Log.d("check creation", this.creation_timestamp);
-        this.edit_timestamp = this.creation_timestamp;
+        this.edit_timestamp = edit_timestamp;
         this.id = id;
     }
 
@@ -46,11 +49,30 @@ public class Todo {
         isDone = done;
     }
 
-    public void setEdit_timestamp(String edit_timestamp) {
-        this.edit_timestamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+    public String getCreation_timestamp() {
+        return creation_timestamp;
     }
 
-    //todo getteres and setters
+    public void setCreation_timestamp(String creation_timestamp) {
+        this.creation_timestamp = creation_timestamp;
+    }
 
+    public void setEdit_timestamp(String edit_timestamp) {
+        this.edit_timestamp = edit_timestamp;
+    }
+
+
+
+    public String getEdit_timestamp() {
+        return edit_timestamp;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
 }
